@@ -237,19 +237,17 @@ export default class ClientController {
     }
 
     sendSafe(safe) {
-		console.log("SAFE")
         if (!this.visible || this.isBalloonThrottled) {
             return
         }
 
         let message = this.interface.main.safe.safeMessagesMap[safe]
-		console.log(message)
+
         this.interface.showTextBalloon(this.id, message)
         this.network.send('send_safe', { safe: safe })
     }
 
     sendJoke() {
-		console.log("JOKE")
         const randomJokeId = Phaser.Math.Between(0, this.crumbs.jokes.length - 1)
 
         this.interface.showTextBalloon(this.id, this.crumbs.jokes[randomJokeId], false)

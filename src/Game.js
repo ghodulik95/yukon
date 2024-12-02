@@ -36,8 +36,6 @@ export default class Game extends Phaser.Game {
 
 }
 
-globalThis.teststr = "weee"
-
 window.onload = () => {
-    const gameInstance = new Game(game)
+    new Game(game)
 }
