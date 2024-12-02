@@ -18,6 +18,8 @@ export default class WorldController extends BaseScene {
         this.globalLoadQueue = {}
 
         this.worldTimeZone = 'America/Los_Angeles'
+        
+        WorldController.allRooms = {}
     }
 
     create() {
@@ -39,8 +41,12 @@ export default class WorldController extends BaseScene {
     }
 
     createRoom(args) {
+        console.log("ROOM")
+        console.log(args)
         this.room = this.roomFactory.create(args)
-
+        WorldController.allRooms[this.room.id] = this.room
+        
+        console.log(WorldController.allRooms)
         if (args.users) {
             this.lastRoom = this.room.id
 

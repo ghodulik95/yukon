@@ -2,7 +2,6 @@ import DataHandler from './DataHandler'
 
 import io from 'socket.io-client'
 
-
 export default class Network {
 
     constructor(game) {
@@ -12,6 +11,7 @@ export default class Network {
 
         this.handler = new DataHandler(this)
         this.client = null
+        this.altMsgHandler = null
 
         this.saveUsername = false
         this.savePassword = false
@@ -21,6 +21,8 @@ export default class Network {
         this.lastLoginScene = null
 
         this.worldName
+
+		Network.messagesSent = 0
     }
 
     connectLogin(saveUsername, savePassword, onConnect) {
@@ -60,7 +62,7 @@ export default class Network {
         this.disconnect()
 
         let config = this.game.crumbs.worlds[world]
-
+        console.log(config)
         this.client = io.connect(config.host, { path: config.path })
 
         this.client.once('connect', onConnect)
@@ -72,24 +74,64 @@ export default class Network {
     disconnect() {
         if (this.client) {
             this.client.disconnect()
+            global.networkInstance = null;
         }
     }
+
+	sleep(ms) {
+		const start = Date.now();
+  		while (Date.now() - start < ms);
+	}
 
     send(action, args = {}) {
         if (!this.client) {
             return
         }
 
-        if (localStorage.logging == 'true') {
-            console.log('Message sending:', action, args)
+        if (true) {
+            console.log('Network Message sending:', action, args)
         }
 
-        this.client.emit('message', { action: action, args: args })
-    }
+		
+        //this.client.emit('message', { action: action, args: args })
+		const serverMessages = ['login', 'token_login', 'join_server', 'game_auth', 'load_player']
+        const sendToServer = serverMessages.includes(action)
+        //console.log(action + " toServer: " + sendToServer)
+        // If related to auth and joining server
+        if (sendToServer || true) {
+            this.client.emit('message', { action: action, args: args })
+        } else {
+            this.sendMessageToHttpServer({ action: action, args: args })
+        }
+	}
+    
+    sendMessageToHttpServer(message) {
+		const payload = message
+        console.log("Building Payload for server")
+        console.log(payload)
+        console.log(JSON.stringify(payload))
+
+		fetch('http://localhost:3000/emit-federated', {
+    		method: 'POST', // Change to GET, PUT, DELETE as needed
+    		headers: {
+        		'Content-Type': 'application/json',
+    		},
+    		body: JSON.stringify(payload),
+		})
+    	.then((response) => "Got response") // Parse JSON response
+    	.then((data) => {
+        	console.log('Payload sent successfully:', data);
+    	})
+    	.catch((error) => {
+        	console.error('Error:', error);
+    	});
+	}
 
     // Handlers
 
     onMessage(message) {
+        console.log("Network received message", message.action)
+        //console.log(message)
         this.handler.handle(message)
     }
 
